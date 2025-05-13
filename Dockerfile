@@ -25,7 +25,7 @@ COPY . .
 
 RUN composer install --optimize-autoloader
 
-RUN npm install && npm run build
+RUN npm install --legacy-peer-deps && npm run build
 
 RUN chown -R www-data:www-data /var/www
 
