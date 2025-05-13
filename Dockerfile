@@ -1,10 +1,7 @@
+# Utilise une image PHP officielle avec extensions nécessaires
 FROM php:8.1-fpm
 
-# Arguments defined in docker-compose.yml
-ARG user
-ARG uid
-
-# Install system dependencies
+# Installe dépendances système
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -13,27 +10,29 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    libzip-dev \
-    libmagickwand-dev \
-    mariadb-client
+    npm \
+    nodejs
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Installe Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN pecl install imagick \
-    && docker-php-ext-enable imagick
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
-
-# Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Create system user to run Composer and Artisan Commands
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
-
-# Set working directory
+# Définit le dossier de travail
 WORKDIR /var/www
 
-USER $user
+# Copie tout ton projet
+COPY . .
+
+# Installe les dépendances PHP
+RUN composer install --no-dev --optimize-autoloader
+
+# Installe les dépendances front-end
+RUN npm install && npm run build
+
+# Donne les bonnes permissions
+RUN chown -R www-data:www-data /var/www
+
+# Expose le port
+EXPOSE 8000
+
+# Commande par défaut : serve Laravel
+CMD php artisan migrate --seed && php artisan serve --host=0.0.0.0 --port=8000
