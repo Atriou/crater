@@ -22,7 +22,7 @@ WORKDIR /var/www
 COPY . .
 
 # Installe dépendances PHP/Laravel
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --optimize-autoloader
 
 # Installe dépendances front-end
 RUN npm install && npm run build
