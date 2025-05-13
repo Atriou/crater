@@ -10,7 +10,14 @@ COPY . .
 # Installer les dépendances PHP (Laravel / Crater)
 RUN composer install --optimize-autoloader
 
-# Installer les dépendances front-end et builder
+# Copier l'exemple d'environnement
+RUN cp .env.example .env
+
+# Générer la clé APP_KEY nécessaire pour Laravel
+RUN php artisan key:generate
+
+# Ensuite seulement installer et builder
+RUN composer install --optimize-autoloader
 RUN npm install && npm run build
 
 # Donner les bonnes permissions à l'application
