@@ -1,44 +1,23 @@
-FROM php:8.1-fpm
+# Utiliser une image toute prête avec PHP + Composer + Node.js déjà installés
+FROM thecodingmachine/php:8.1-v4-cli-node14
 
-# Installer dépendances système + extensions PHP
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    unzip
-
-# Installer Node.js 14 correctement
-RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get update && apt-get install -y nodejs
-
-# Installer extensions PHP après Node.js
-RUN docker-php-ext-install pdo_mysql mbstring exif zip xml gd
-
-# Installer Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Définir dossier de travail
+# Définir le dossier de travail
 WORKDIR /var/www
 
-# Copier ton projet
+# Copier tout ton projet
 COPY . .
 
-# Installer dépendances PHP (Laravel/Crater)
+# Installer les dépendances PHP (Laravel / Crater)
 RUN composer install --optimize-autoloader
 
-# Installer dépendances front-end et builder assets
+# Installer les dépendances front-end et builder
 RUN npm install && npm run build
 
-# Donner permissions correctes
+# Donner les bonnes permissions à l'application
 RUN chown -R www-data:www-data /var/www
 
-# Exposer port
+# Exposer le port HTTP
 EXPOSE 8000
 
-# Lancer serveur Laravel
+# Commande de démarrage de ton Crater
 CMD php artisan migrate --seed && php artisan serve --host=0.0.0.0 --port=8000
